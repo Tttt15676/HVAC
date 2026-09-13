@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HVAC System Estimate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ice:#EDF1F1;
+    --ice-dim:#E1E8E8;
+    --navy:#1F2E38;
+    --steel:#3E7CB1;
+    --steel-dark:#2E5F8A;
+    --amber:#D9822B;
+    --frost:#8FA9AE;
+    --line: rgba(31,46,56,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ice);
+    color:var(--navy);
+    font-family:'Inter', system-ui, sans-serif;
+    line-height:1.5;
+  }
+  .wrap{
+    max-width:1000px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  header{
+    margin-bottom:36px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:clamp(28px, 4vw, 40px);
+    margin:0 0 12px;
+    color:var(--navy);
+    letter-spacing:-0.2px;
+  }
+  .sub{
+    color:#4B5A63;
+    font-size:15.5px;
+    max-width:540px;
+  }
+  .gauge{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    margin-top:20px;
+    width:220px;
+    height:6px;
+  }
+  .gauge span{
+    flex:1;
+    height:100%;
+  }
+  .gauge span:nth-child(1){ background:var(--steel); }
+  .gauge span:nth-child(2){ background:var(--frost); }
+  .gauge span:nth-child(3){ background:var(--ice-dim); }
+  .gauge span:nth-child(4){ background:var(--amber); }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1.15fr 0.85fr;
+    gap:22px;
+  }
+  @media (max-width:760px){
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .panel{
+    padding:32px;
+    background:#fff;
+    border:1px solid var(--line);
+  }
+
+  .field{
+    margin-bottom:26px;
+  }
+  .field label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:13.5px;
+    font-weight:600;
+    margin-bottom:10px;
+    color:var(--navy);
+  }
+  .field label .val{
+    font-family:'Space Grotesk', sans-serif;
+    color:var(--steel);
+    font-size:15px;
+  }
+
+  input[type="range"]{
+    -webkit-appearance:none;
+    width:100%;
+    height:2px;
+    background:var(--line);
+    outline:none;
+    margin:8px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;
+    height:16px;
+    background:var(--steel);
+    border:2px solid #fff;
+    box-shadow:0 0 0 1px var(--steel);
+    border-radius:50%;
+    cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:16px;
+    height:16px;
+    background:var(--steel);
+    border:2px solid #fff;
+    box-shadow:0 0 0 1px var(--steel);
+    border-radius:50%;
+    cursor:pointer;
+    border:none;
+  }
+
+  .options{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:8px;
+  }
+  .options.wide{ grid-template-columns:repeat(3, 1fr); }
+  .opt{
+    border:1px solid var(--line);
+    padding:10px 12px;
+    font-size:13.5px;
+    cursor:pointer;
+    background:transparent;
+    color:var(--navy);
+    text-align:left;
+    font-family:'Inter', sans-serif;
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .opt:hover{ border-color:var(--steel); }
+  .opt.active{
+    border-color:var(--steel);
+    background:rgba(62,124,177,0.08);
+    color:var(--steel-dark);
+    font-weight:600;
+  }
+  .opt small{
+    display:block;
+    font-weight:400;
+    color:#6E7B82;
+    margin-top:2px;
+    font-size:12px;
+  }
+  .opt.active small{ color:var(--steel-dark); opacity:0.75; }
+
+  .panel.result{
+    background:var(--navy);
+    color:var(--ice);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .estimate-label{
+    font-size:12.5px;
+    color:#8FA0A8;
+    margin-bottom:6px;
+  }
+  .estimate{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:clamp(28px, 4vw, 38px);
+    color:var(--ice);
+    line-height:1.15;
+    border-bottom:1px solid rgba(237,241,241,0.15);
+    padding-bottom:20px;
+    margin-bottom:20px;
+  }
+  .estimate .sep{
+    color:#5F7078;
+    font-weight:400;
+    font-size:0.6em;
+    padding:0 6px;
+  }
+  .breakdown{
+    font-size:13px;
+    color:#A9B8BD;
+  }
+  .breakdown div{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px solid rgba(237,241,241,0.08);
+  }
+  .breakdown div span:last-child{
+    color:var(--ice);
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:500;
+  }
+
+  .cta-block{
+    margin-top:28px;
+  }
+  .note{
+    font-size:12px;
+    color:#728088;
+    margin-bottom:16px;
+  }
+  button.primary{
+    width:100%;
+    padding:14px 16px;
+    background:var(--amber);
+    color:var(--navy);
+    border:none;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:background 0.15s;
+  }
+  button.primary:hover{ background:#C4741F; }
+
+  .lead-form{
+    display:none;
+    flex-direction:column;
+    gap:10px;
+  }
+  .lead-form.active{ display:flex; }
+  .lead-form input{
+    padding:11px 12px;
+    background:transparent;
+    border:1px solid rgba(237,241,241,0.25);
+    color:var(--ice);
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+  }
+  .lead-form input::placeholder{ color:#728088; }
+  .lead-form input:focus{ outline:none; border-color:var(--amber); }
+
+  .confirm{
+    display:none;
+    text-align:left;
+  }
+  .confirm.active{ display:block; }
+  .confirm .check{
+    color:#7FB0A0;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    margin-bottom:6px;
+  }
+  .confirm p{
+    color:#A9B8BD;
+    font-size:13px;
+    margin:0;
+  }
+
+  footer{
+    margin-top:20px;
+    font-size:12px;
+    color:#647178;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>HVAC replacement estimate</h1>
+    <p class="sub">Tell us about your home and the system you need. The range updates live — a firm quote still needs a technician to size the equipment on-site.</p>
+    <div class="gauge"><span></span><span></span><span></span><span></span></div>
+  </header>
+
+  <div class="grid">
+    <div class="panel inputs">
+
+      <div class="field">
+        <label>System type</label>
+        <div class="options" id="systemOpts">
+          <button class="opt active" data-key="ac" data-low="3.5" data-high="6">AC only<small>$3.50–6/sq ft</small></button>
+          <button class="opt" data-key="furnace" data-low="3" data-high="5.5">Furnace only<small>$3–5.50/sq ft</small></button>
+          <button class="opt" data-key="heatpump" data-low="5" data-high="9">Heat pump<small>$5–9/sq ft</small></button>
+          <button class="opt" data-key="full" data-low="6.5" data-high="11">Full system<small>AC + furnace, $6.50–11/sq ft</small></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Home size <span class="val" id="sqftVal">2,000 sq ft</span></label>
+        <input type="range" id="sqft" min="800" max="6000" step="50" value="2000">
+      </div>
+
+      <div class="field">
+        <label>Efficiency tier</label>
+        <div class="options wide" id="tierOpts">
+          <button class="opt active" data-key="standard" data-mult="1.0">Standard<small>Baseline SEER</small></button>
+          <button class="opt" data-key="highefficiency" data-mult="1.25">High-efficiency<small>Higher SEER</small></button>
+          <button class="opt" data-key="premium" data-mult="1.6">Premium<small>Top-tier, variable speed</small></button>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:0;">
+        <label>Ductwork</label>
+        <div class="options" id="ductOpts">
+          <button class="opt active" data-key="0">Existing, good shape<small>No duct work needed</small></button>
+          <button class="opt" data-key="2.5">Needs replacement<small>+$2.50/sq ft</small></button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="panel result">
+      <div>
+        <div class="estimate-label">Estimated project cost</div>
+        <div class="estimate"><span id="lowEst">$7,000</span><span class="sep">/</span><span id="highEst">$12,000</span></div>
+        <div class="breakdown" id="breakdown"></div>
+      </div>
+
+      <div class="cta-block">
+        <div class="note">Want the real number? Get a fixed quote after a technician sizes your system.</div>
+
+        <button class="primary" id="ctaBtn">Get my exact quote</button>
+
+        <form class="lead-form" id="leadForm">
+          <input type="text" placeholder="Full name" id="nameInput" required>
+          <input type="email" placeholder="Email" id="emailInput" required>
+          <input type="tel" placeholder="Phone" id="phoneInput" required>
+          <button class="primary" type="submit">Send my estimate</button>
+        </form>
+
+        <div class="confirm" id="confirmBlock">
+          <div class="check">Request received</div>
+          <p>Someone from our team will follow up with a firm quote after reviewing your details.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Estimate based on typical regional equipment and labor rates. Final pricing depends on load calculation, equipment sizing, and site conditions.</footer>
+</div>
+
+<script>
+  const state = {
+    sqft: 2000,
+    system: {low:3.5, high:6},
+    tierMult: 1.0,
+    ductCost: 0
+  };
+
+  function setupGroup(id, callback){
+    const group = document.getElementById(id);
+    group.querySelectorAll('.opt').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        group.querySelectorAll('.opt').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        callback(btn);
+        update();
+      });
+    });
+  }
+
+  setupGroup('systemOpts', (btn)=>{
+    state.system = {low: parseFloat(btn.dataset.low), high: parseFloat(btn.dataset.high)};
+  });
+  setupGroup('tierOpts', (btn)=>{
+    state.tierMult = parseFloat(btn.dataset.mult);
+  });
+  setupGroup('ductOpts', (btn)=>{
+    state.ductCost = parseFloat(btn.dataset.key);
+  });
+
+  const sqftInput = document.getElementById('sqft');
+  const sqftVal = document.getElementById('sqftVal');
+  sqftInput.addEventListener('input', ()=>{
+    state.sqft = parseInt(sqftInput.value, 10);
+    sqftVal.textContent = state.sqft.toLocaleString() + ' sq ft';
+    update();
+  });
+
+  function fmt(n){
+    return '$' + Math.round(n).toLocaleString();
+  }
+
+  function update(){
+    const systemLow = state.sqft * state.system.low * state.tierMult;
+    const systemHigh = state.sqft * state.system.high * state.tierMult;
+    const ductTotal = state.sqft * state.ductCost;
+
+    const low = systemLow + ductTotal;
+    const high = systemHigh + ductTotal;
+
+    document.getElementById('lowEst').textContent = fmt(low);
+    document.getElementById('highEst').textContent = fmt(high);
+
+    const breakdown = document.getElementById('breakdown');
+    breakdown.innerHTML = '';
+    const rows = [
+      ['Equipment + labor', fmt(systemLow) + '–' + fmt(systemHigh)],
+      ['Efficiency factor', 'x' + state.tierMult.toFixed(2)],
+      ['Ductwork', state.ductCost > 0 ? fmt(ductTotal) : '—']
+    ];
+    rows.forEach(([label, val])=>{
+      const row = document.createElement('div');
+      row.innerHTML = '<span>'+label+'</span><span>'+val+'</span>';
+      breakdown.appendChild(row);
+    });
+  }
+
+  document.getElementById('ctaBtn').addEventListener('click', ()=>{
+    document.getElementById('ctaBtn').style.display = 'none';
+    document.getElementById('leadForm').classList.add('active');
+  });
+
+  document.getElementById('leadForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    document.getElementById('leadForm').classList.remove('active');
+    document.getElementById('confirmBlock').classList.add('active');
+  });
+
+  update();
+</script>
+</body>
+</html>
